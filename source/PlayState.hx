@@ -1,5 +1,6 @@
 package;
 
+import flixel.math.FlxPoint;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
@@ -18,38 +19,62 @@ class PlayState extends FlxState
 		super.create();
 
 		date = Date.now();
-		datePath = '${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}_${(date.getHours() % 12) + 1}-${date.getMinutes()}-${date.getSeconds()}';
+		datePath = '${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}_${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}';
 
 		new FlxTimer().start(1 / FlxG.updateFramerate, function(t)
 		{
-			screenshot();
+			if (dirty)
+				screenshot();
+			frame++;
 		}, 0);
 
 		char = new FlxSprite().makeGraphic(32, 32);
 		add(char);
+
+		dirty = true;
 	}
 
 	override public function update(elapsed:Float)
 	{
 		super.update(elapsed);
 
-		if (FlxG.keys.anyPressed([A, LEFT]))
-			char.x -= 10;
-		if (FlxG.keys.anyPressed([D, RIGHT]))
-			char.x += 10;
+		if (FlxG.keys.anyPressed([A, LEFT, D, RIGHT, W, UP, S, DOWN]))
+		{
+			if (FlxG.keys.anyPressed([A, LEFT]))
+				char.x -= 10;
+			if (FlxG.keys.anyPressed([D, RIGHT]))
+				char.x += 10;
 
-		if (FlxG.keys.anyPressed([W, UP]))
-			char.y -= 10;
-		if (FlxG.keys.anyPressed([S, DOWN]))
-			char.y += 10;
+			if (FlxG.keys.anyPressed([W, UP]))
+				char.y -= 10;
+			if (FlxG.keys.anyPressed([S, DOWN]))
+				char.y += 10;
+
+			dirty = char.isOnScreen();
+		}
+
+		if (mousePos.x != FlxG.mouse.x || mousePos.y != FlxG.mouse.y)
+		{
+			mousePos.set(FlxG.mouse.x, FlxG.mouse.y);
+			dirty = true;
+		}
 	}
 
 	var frame = 0;
 	var date:Date;
 	var datePath:String;
 
+	var dirty = false;
+
+	var mousePos:FlxPoint = new FlxPoint();
+
 	public function screenshot()
 	{
+		if (!dirty)
+			return;
+
+		dirty = false;
+
 		var bitmap = BitmapData.fromImage(FlxG.stage.window.readPixels());
 		var bytes = bitmap.encode(bitmap.rect, new PNGEncoderOptions());
 
@@ -60,8 +85,6 @@ class PlayState extends FlxState
 
 		File.saveBytes('$dir/$frame.png', bytes);
 
-		trace('Saved frame : $frame');
-
-		frame++;
+		trace('Dirty Frame $frame');
 	}
 }
