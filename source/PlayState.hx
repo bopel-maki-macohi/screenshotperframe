@@ -89,8 +89,8 @@ class PlayState extends FlxState
 			FileSystem.createDirectory(dir);
 
 		File.saveContent('$dir/$datePath.json', Json.stringify({
-			_version: 5,
-			length: frame,
+			_version: 6,
+			_length: frame,
 			frames: frames,
 		}, '\t'));
 
