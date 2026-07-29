@@ -1,5 +1,7 @@
 package;
 
+import openfl.utils.ByteArray;
+import haxe.Json;
 import flixel.math.FlxPoint;
 import flixel.FlxG;
 import flixel.FlxSprite;
@@ -18,13 +20,12 @@ class PlayState extends FlxState
 	{
 		super.create();
 
-		date = Date.now();
+		var date = Date.now();
 		datePath = '${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}_${date.getHours()}-${date.getMinutes()}-${date.getSeconds()}';
 
 		new FlxTimer().start(1 / FlxG.updateFramerate, function(t)
 		{
-			if (dirty)
-				screenshot();
+			screenshot();
 			frame++;
 		}, 0);
 
@@ -61,7 +62,8 @@ class PlayState extends FlxState
 	}
 
 	var frame = 0;
-	var date:Date;
+	var frames:Array<BitmapData> = [];
+
 	var datePath:String;
 
 	var dirty = false;
@@ -71,19 +73,26 @@ class PlayState extends FlxState
 	public function screenshot()
 	{
 		if (!dirty)
+		{
+			frames.push(null);
 			return;
+		}
 
 		dirty = false;
 
 		var bitmap = BitmapData.fromImage(FlxG.stage.window.readPixels());
-		var bytes = bitmap.encode(bitmap.rect, new PNGEncoderOptions());
+		frames.push(bitmap);
 
-		var dir = 'screenshots/$datePath';
+		var dir = 'captures';
 
 		if (!FileSystem.exists(dir))
 			FileSystem.createDirectory(dir);
 
-		File.saveBytes('$dir/$frame.png', bytes);
+		File.saveContent('$dir/$datePath.json', Json.stringify({
+			_version: 5,
+			length: frame,
+			frames: frames,
+		}, '\t'));
 
 		trace('Dirty Frame $frame');
 	}
