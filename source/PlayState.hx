@@ -1,5 +1,7 @@
 package;
 
+import haxe.crypto.Base64;
+import lime.graphics.Image;
 import openfl.utils.ByteArray;
 import haxe.Json;
 import flixel.math.FlxPoint;
@@ -62,7 +64,7 @@ class PlayState extends FlxState
 	}
 
 	var frame = 0;
-	var frames:Array<BitmapData> = [];
+	var frames:Array<String> = [];
 
 	var datePath:String;
 
@@ -81,7 +83,7 @@ class PlayState extends FlxState
 		dirty = false;
 
 		var bitmap = BitmapData.fromImage(FlxG.stage.window.readPixels());
-		frames.push(bitmap);
+		frames.push(Base64.encode(bitmap.encode(bitmap.rect, new PNGEncoderOptions())));
 
 		var dir = 'captures';
 
@@ -89,7 +91,7 @@ class PlayState extends FlxState
 			FileSystem.createDirectory(dir);
 
 		File.saveContent('$dir/$datePath.json', Json.stringify({
-			_version: 6,
+			_version: 10,
 			_length: frame,
 			frames: frames,
 		}, '\t'));
